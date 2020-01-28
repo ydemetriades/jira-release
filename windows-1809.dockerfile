@@ -1,9 +1,9 @@
 # escape=`
-FROM mcr.microsoft.com/powershell:windowsservercore-1809
+FROM mcr.microsoft.com/powershell:nanoserver-1809
 
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
-COPY scripts/ .
+ADD scripts/ .
 
 RUN Invoke-WebRequest -UseBasicParsing https://chocolatey.org/install.ps1 | Invoke-Expression; `
     choco install -y python --version 3.6.4; 

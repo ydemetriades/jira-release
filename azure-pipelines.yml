@@ -1,7 +1,3 @@
-# Docker
-# Build a Docker image
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
 trigger:
   tags:
     include:
@@ -12,11 +8,13 @@ resources:
 
 variables:
   tag: '$(Build.SourceBranchName)'
+  repository: 'ydemetriades/jira-release'
 
 stages:
 - stage: Build
   displayName: Build image
   jobs:
+
   - job: Linux_Build
     displayName: Linux Job
     pool:
@@ -25,11 +23,15 @@ stages:
     - task: Docker@2
       displayName: Build Linux Docker Image
       inputs:
-        command: build
+        command: 'buildAndPush'
+        repository: $(repository)
         dockerfile: '**/linux.dockerfile'
+        containerRegistry: 'DockerHub'
+        addPipelineData: false
         tags: |
           $(tag)
           latest
+
   - job: Windows_1809_Build
     displayName: Windows 1809 Job
     pool:
@@ -38,8 +40,11 @@ stages:
     - task: Docker@2
       displayName: Build Windows 1809 Docker Image
       inputs:
-        command: build
+        command: 'buildAndPush'
+        repository: $(repository)
         dockerfile: '**/windows-1809.dockerfile'
+        containerRegistry: 'DockerHub'
+        addPipelineData: false
         tags: |
           $(tag)-win1809
           latest-win1809

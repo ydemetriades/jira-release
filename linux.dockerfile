@@ -1,4 +1,5 @@
 FROM python:3.6.4-alpine3.7
+LABEL maintainer="yiannis.demetriades@gmail.com"
 
 ENV LANG C.UTF-8
 

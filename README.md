@@ -19,13 +19,13 @@ _Note_: `latest` tag points to `v1.0`
 
 ### Windows
 
-`ydemetriades/jira-release` on Windows is available only for `1903`
+`ydemetriades/jira-release` on Windows is available only for `1809`
 
 |Tag|Version|Pull|
 |:-:|:-----:|----|
-|__v1.0-win1903__|__v1.0__|`ydemetriades/jira-release:v1.0-win`|
+|__v1.0-win1809__|__v1.0__|`ydemetriades/jira-release:v1.0-win1809`|
 
-Note: `latest-win` tag points to `v1.0-win`
+Note: `latest-win1809` tag points to `v1.0-win1809`
 
 ## Parameters
 

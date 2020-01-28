@@ -30,16 +30,16 @@ stages:
         tags: |
           $(tag)
           latest
-  - job: Windows_Build
-    displayName: Windows Job
+  - job: Windows_1809_Build
+    displayName: Windows 1809 Job
     pool:
       vmImage: 'windows-latest'
     steps:
     - task: Docker@2
-      displayName: Build Windows Docker Image
+      displayName: Build Windows 1809 Docker Image
       inputs:
         command: build
-        dockerfile: '**/windows.dockerfile'
+        dockerfile: '**/windows-1809.dockerfile'
         tags: |
-          $(tag)-win
-          latest-win
+          $(tag)-win1809
+          latest-win1809

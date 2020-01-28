@@ -6,6 +6,6 @@ RUN apk update && \
     apk upgrade && \
     pip install --no-cache-dir requests
 
-COPY script/jira-version.py /jira-release.py
+COPY script/jira-release.py /jira-release.py
 
 ENTRYPOINT ["python", "/jira-release.py"]

@@ -5,7 +5,7 @@ ENV LANG C.UTF-8
 
 RUN apk update && \
     apk upgrade && \
-    pip install --no-cache-dir requests
+    pip install --no-cache-dir requests argparse
 
 COPY script/jira-release.py /jira-release.py
 

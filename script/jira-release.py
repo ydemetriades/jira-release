@@ -1,71 +1,112 @@
 #!/usr/bin/env python
+from ast import parse
 import os
+import argparse
 import requests
+from requests.auth import HTTPBasicAuth
 from datetime import datetime
+import json
 
-jira_version_name = os.getenv('JIRA_VERSION_NAME')
-jira_project = os.getenv('JIRA_PROJ')
-auth_user = os.getenv('JIRA_AUTH_USER')
-auth_password = os.getenv('JIRA_AUTH_PASSWORD')
+class EnvDefault(argparse.Action):
+    def __init__(self, envvar, required=False, default=None, **kwargs):
+        if not default and envvar:
+            if envvar in os.environ:
+                default = os.environ[envvar]
+        if required and default:
+            required = False
+        super(EnvDefault, self).__init__(default=default, required=required, **kwargs)
 
-if jira_version_name is None:
-    print("Version Name Variable [JIRA_VERSION_NAME] is not defined.")
-    exit(2)
-    
-if jira_project is None:
-    print("Jira Project Environment Variable [JIRA_PROJ] is not defined.")
-    exit(2)
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
 
-if auth_user is None:
-    print("Authentication User Environment Variable [JIRA_AUTH_USER] is not defined.")
-    exit(2)
-    
-if auth_password is None:
-    print("Authentication Password Environment Variable [JIRA_AUTH_PASSWORD] is not defined.")
-    exit(2)
+### Required Arguments
+parser = argparse.ArgumentParser( description='Create Jira versions easily', epilog="And that's how we create Jira versions easily!")
+parser.add_argument('--version', '-v', action=EnvDefault, envvar='JIRA_VERSION_NAME', type=str, required=True, help='The unique name of the version. Can be specified by environment variable JIRA_VERSION_NAME.')
+parser.add_argument('--project', '-p', action=EnvDefault, envvar='JIRA_PROJ', type=int, required=True, help='The ID of the project to which this version is attached.')
+parser.add_argument('--user', '-u', action=EnvDefault, envvar='JIRA_AUTH_USER', type=str, required=True, help='The Jira authentication user email.')
+parser.add_argument('--password', action=EnvDefault, envvar='JIRA_AUTH_PASSWORD', type=str, required=True, help='Jira API Authorization Password / API Token.')
 
-jira_version_date = datetime.today().strftime('%d/%b/%Y')
+### Optional Arguments
+parser.add_argument('--description', '-d', action=EnvDefault, envvar='JIRA_VERSION_DESCRIPTION', default='', type=str, help='The description of the version. Default value is an empty string.')
 
-jira_url = os.getenv('JIRA_URL', 'https://jira.org')
+# Should update instead of create
+help_update='Indicates whether to update or create the version. Can be specified by environment variable JIRA_VERSION_UPDATE. Default value is false.'
+if "JIRA_VERSION_UPDATE" in os.environ:
+    parser.add_argument('--update', type=bool, default=os.environ.get("JIRA_VERSION_UPDATE"), help=help_update)
+else:
+    parser.add_argument('--update', action='store_true', help=help_update)
 
-jira_version_release_env = os.getenv('JIRA_VERSION_RELEASED', 'true')
-jira_version_release = True
+# Released
+help_released='Indicates that the version is released. Can be specified by environment variable JIRA_VERSION_RELEASED. Default value is false.'
+if "JIRA_VERSION_RELEASED" in os.environ:
+    parser.add_argument('--released', type=bool, default=os.environ.get("JIRA_VERSION_RELEASED"), help=help_released)
+else:
+    parser.add_argument('--released', action='store_true', help=help_released)
 
-if jira_version_release_env == 'false':
-    jira_version_release = False
+# Archived
+help_archived='Indicates that the version is archived. Can be specified by environment variable JIRA_VERSION_ARCHIVED. Default value is false.'
+if "JIRA_VERSION_ARCHIVED" in os.environ:
+    parser.add_argument('--archived', type=bool, default=os.environ.get("JIRA_VERSION_ARCHIVED"), help=help_archived)
+else:
+    parser.add_argument('--archived', action='store_true', help=help_archived)
 
-jira_version_description =os.getenv('JIRA_VERSION_DESCRIPTION', 'Version {}'.format(jira_version_name))
+# Url
+parser.add_argument('--url', action=EnvDefault, envvar='JIRA_URL', type=str, default='https://jira.org', help='The Jira host url. Default value will be https://jira.org')
 
-print('Will Attempt to create version [{}] for project [{}] '.format(jira_version_name, jira_project))
+# API Version
+help_api_version='The Jira API version. Default value is 3. Can be specified by environment variable JIRA_API_VERSION. Supports only version 2 and 3.'
+if "JIRA_API_VERSION" in os.environ:
+    parser.add_argument('--api-version', type=int, default=os.environ.get("JIRA_API_VERSION"), help=help_api_version)
+else:
+    parser.add_argument('--api-version', type=int, default=3, choices=[2, 3], help=help_api_version)
 
-jira_api_version = os.getenv('JIRA_API_VERSION', '2')
+args = parser.parse_args()
 
+if args.api_version != 2 and args.api_version != 3:
+    exit(parser.print_usage())
 
-if jira_api_version == '2':
-    data = {
-        'description': jira_version_description,
-        'name': jira_version_name,
-        'userReleaseDate': jira_version_date,
-        'project': jira_project,
-        'released': jira_version_release
-    }
+jira_version_date = datetime.today().strftime('%Y-%m-%d')
 
-    # Construct URL
-    api_url = ('%(url)s/rest/api/2/version' % {'url': jira_url})
+auth = HTTPBasicAuth(args.user, args.password)
+headers = {
+    "Accept": "application/json",
+    "Content-Type": "application/json"
+}
 
-    print('Sending request to:')
-    print(api_url)
-    print('with body')
-    print(data)
+data = {
+    'description': args.description,
+    'name': args.version,
+    'projectId': args.project,
+    'released': args.released,
+    "archived": args.archived,
+}
 
-    # Post build status to Bitbucket
-    response = requests.post(api_url, auth=(auth_user, auth_password), json=data)
+# If released
+if args.released:
+    data['userReleaseDate'] = jira_version_date
 
-    print('Response:')
-    print(response)
-    print(response.text)
+# Construct URL
+if args.update:
+    api_url = ('%(url)s/rest/api/%(api_version)s/version/%(version)s' %{'url': args.url, 'api_version': args.api_version, 'version': args.version})
+else:
+    data['startDate'] = jira_version_date
+    api_url = ('%(url)s/rest/api/%(api_version)s/version' %{'url': args.url, 'api_version': args.api_version})
 
-    if response:
-        exit(0)
-    else:
-        exit(1)
+payload = json.dumps(data)
+
+print('\nSending request:')
+print(api_url)
+print('\nBODY:')
+print(data)
+
+response = requests.request(
+   "POST",
+   api_url,
+   data=payload,
+   headers=headers,
+   auth=auth
+)
+
+print('\nResponse:')
+print(response)
+print(response.text)

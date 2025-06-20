@@ -20,22 +20,13 @@ You can find it at [DockerHub](https://hub.docker.com/r/ydemetriades/jira-releas
 
 | Tag | Pull |
 |:-:|----|
-| **v2.1** | `ydemetriades/jira-release:v2.1` |
+| **v3.2** | `ydemetriades/jira-release:v3.2` |
+| **v3.1** | `ydemetriades/jira-release:v3.1` |
+| **v3.0** | `ydemetriades/jira-release:v3.0` |
 | **v2.0** | `ydemetriades/jira-release:v2.0` |
 | **v1.0** | `ydemetriades/jira-release:v1.0` |
 
-_Note_: The `latest` tag points to `v2.1`.
-
-### Windows
-
-`ydemetriades/jira-release` on Windows is available only for `1809`.
-
-| Tag | Pull |
-|:-:|----|
-| **v2.0-win1809** | `ydemetriades/jira-release:v2.0-win1809` |
-| **v1.0-win1809** | `ydemetriades/jira-release:v1.0-win1809` |
-
-_Note_: The `latest-win1809` tag points to `v2.0-win1809`.
+_Note_: The `latest` tag points to `v3.2`.
 
 ## Parameters
 

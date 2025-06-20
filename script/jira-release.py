@@ -43,7 +43,10 @@ parser.add_argument('--released', action=EnvDefault, envvar='JIRA_VERSION_RELEAS
 parser.add_argument('--archived', action=EnvDefault, envvar='JIRA_VERSION_ARCHIVED', type=bool, help='Indicates that the version is archived. Can be specified by environment variable JIRA_VERSION_ARCHIVED. Default value is false.')
 
 # Url
-parser.add_argument('--url', action=EnvDefault, envvar='JIRA_URL', type=str, default='https://jira.org', help='The Jira host url. Default value will be https://jira.org')
+if "JIRA_URL" in os.environ:
+    parser.add_argument('--url', action=EnvDefault, envvar='JIRA_URL', type=str, help='The Jira host url. Default value is https://jira.org. Can be specified by environment variable JIRA_URL.')
+else:
+    parser.add_argument('--url', action=EnvDefault, envvar='JIRA_URL', type=str, default='https://jira.org', help='The Jira host url. Default value is https://jira.org. Can be specified by environment variable JIRA_URL.')
 
 # API Version
 help_api_version='The Jira API version. Default value is 3. Can be specified by environment variable JIRA_API_VERSION. Supports only versions 2 and 3.'
@@ -56,12 +59,6 @@ args = parser.parse_args()
 
 if args.api_version != 2 and args.api_version != 3:
     exit(parser.print_usage())
-
-auth = HTTPBasicAuth(args.user, args.password)
-headers = {
-    "Accept": "application/json",
-    "Content-Type": "application/json"
-}
 
 data = {
     'projectId': args.project
@@ -83,6 +80,12 @@ if args.archived != None:
     data['archived'] = args.archived
 
 restMethod = "POST"
+
+auth = HTTPBasicAuth(args.user, args.password)
+headers = {
+    "Accept": "application/json",
+    "Content-Type": "application/json"
+}
 
 # Construct URL
 if args.update:
@@ -132,8 +135,8 @@ else:
 
 try:
     payload = json.dumps(data)
-    print("\nWill request to %(url)s" %{'url': api_url})
-    print("\nPayload:")
+    print("Will request to %(url)s" %{'url': api_url})
+    print("Payload:")
     print(payload)
 
     response = requests.request(

@@ -1,7 +1,7 @@
-FROM python:3.6.4-alpine3.7
+FROM python:alpine
 LABEL maintainer="yiannis.demetriades@gmail.com"
 
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 
 RUN apk update && \
     apk upgrade && \
